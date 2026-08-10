@@ -1,0 +1,12 @@
+{
+  "name": "collegegpt",
+  "version": "1.0.0",
+  "description": "AI-powered chatbot and portal for college department queries, built with vanilla JS and a serverless Gemini backend.",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

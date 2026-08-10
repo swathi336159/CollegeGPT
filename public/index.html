@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusConnect - Resource Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f7f7f7; }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        /* Style for full UID display to prevent overflow */
+        #user-id-display {
+            word-break: break-all;
+            white-space: normal;
+            max-width: 200px; /* Limit the width */
+        }
+        .chat-messages-container {
+            height: 250px; /* Standardized height for both chatbots */
+            overflow-y: auto; 
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            background-color: #f9fafb;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="min-h-screen flex flex-col items-center p-4">
+        
+        <header class="w-full max-w-6xl p-4 bg-white shadow-lg rounded-xl flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-3">
+                <img src="logo.png" alt="CLG GPT Logo" class="h-8">
+                <h1 class="text-3xl font-bold text-indigo-700">AI ASSISTANT <h1>
+            </div>
+            <div id="user-info" class="text-sm flex flex-col items-end">
+                <p id="user-id-display" class="font-medium text-gray-600 text-right">Not Logged In</p> 
+                <p id="user-role-display" class="font-bold text-green-600"></p>
+            </div>
+        </header>
+
+        <div id="login-screen" class="w-full max-w-md card p-8 my-auto">
+            <h2 class="text-2xl font-bold text-center text-indigo-700 mb-6">Role-Based Campus Login</h2>
+            <p class="text-sm text-center text-gray-500 mb-6">Enter your whitelisted email to access the relevant portal.</p>
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input type="email" id="login-email" required placeholder="e.g., shreyashetty670@gmail.com or placement1@gmail.com"
+                           class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <button type="submit" id="login-btn" class="w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
+                    Login
+                </button>
+                <p id="login-message" class="text-sm pt-2 text-center text-red-500"></p>
+            </form>
+
+            <div class="mt-4 p-3 bg-indigo-50 rounded-lg text-sm text-indigo-700">
+                <p class="font-semibold mb-1">Current Whitelisted User Groups (Case Sensitive):</p>
+                <ul class="list-disc list-inside text-xs space-y-1">
+                    <li>**Students (3rd Year AI):** shreyashetty670, swathi6105, thrisha745</li>
+                    <li>**Faculty:** faculty1@gmail.com (CS), faculty2@gmail.com (AI)</li>
+                    <li>**Placement Cell:** placement1@gmail.com, placement2@gmail.com</li>
+                </ul>
+            </div>
+        </div>
+        
+        <main id="main-content" class="w-full max-w-6xl space-y-6 hidden">
+            
+            <section class="card p-6">
+                <h2 class="text-2xl font-semibold text-indigo-700 mb-4">📢 College Announcements (Daily Updates)</h2>
+                <div id="notices-list" class="space-y-3">
+                    <p class="text-gray-500">Loading announcements...</p>
+                </div>
+            </section>
+
+            <section id="student-view" class="role-view hidden space-y-6">
+                <h2 class="text-3xl font-bold text-indigo-800 border-b pb-2">Student Portal (<span id="student-branch-display"></span>)</h2>
+                
+                <div id="student-academic-dashboard" class="card p-6 bg-indigo-50 border-l-4 border-indigo-500 space-y-6">
+                    <h3 class="text-2xl font-semibold text-indigo-700">📚 Academic Dashboard</h3>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xl font-medium text-indigo-600 border-b pb-1">📅 Event Schedule</h4>
+                        <div id="events-list" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xl font-medium text-indigo-600 border-b pb-1">⏰ Daily Timetable</h4>
+                        <div id="schedule-list" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xl font-medium text-indigo-600 border-b pb-1">📑 Branch-Specific Notes</h4>
+                        <div id="shared-notes-list" class="space-y-3">
+                            </div>
+                    </div>
+                    
+                    <div class="space-y-4 pt-4 border-t border-indigo-200">
+                        <h4 class="text-xl font-medium text-indigo-600 border-b pb-1">❓ Ask Your Faculty (Q&A)</h4>
+                        <form id="ask-faculty-form" class="space-y-3 card p-4 bg-white shadow-inner">
+                            <div>
+                                <label for="faculty-query-title" class="block text-sm font-medium text-gray-700">Query Summary</label>
+                                <input type="text" id="faculty-query-title" required placeholder="e.g., Doubt on DL Unit 3"
+                                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="faculty-query-content" class="block text-sm font-medium text-gray-700">Detailed Question</label>
+                                <textarea id="faculty-query-content" required rows="2" placeholder="Please elaborate on the backpropagation algorithm..."
+                                          class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            </div>
+                            <button type="submit" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
+                                Submit Question to Faculty
+                            </button>
+                            <p id="faculty-query-message" class="text-sm pt-1 text-center"></p>
+                        </form>
+                        <h5 class="text-lg font-semibold text-indigo-700 pt-2">Your Recent Questions:</h5>
+                        <div id="student-faculty-queries-list" class="space-y-3">
+                            </div>
+                    </div>
+
+                    <div class="space-y-3 pt-4 border-t border-indigo-200">
+                        <h4 class="text-xl font-medium text-indigo-600 border-b pb-1">🤖 Notes & General Queries Assistant (Gemini AI)</h4>
+                        <div id="academic-chat-messages" class="chat-messages-container">
+                            <div class="text-gray-500">Ask me about your AI Branch notes, schedule, or general academic queries!</div>
+                        </div>
+                        <div class="flex">
+                            <input type="text" id="academic-chat-input" placeholder="Ask about 'Deep Learning Midterm Review'..." class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:ring-indigo-500 focus:border-indigo-500">
+                            <button id="academic-send-chat-btn" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-r-lg hover:bg-indigo-700 transition">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="student-placement-dashboard" class="card p-6 bg-yellow-50 border-l-4 border-yellow-500 space-y-6">
+                    <h3 class="text-2xl font-semibold text-yellow-700">💼 Placement Dashboard</h3>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xl font-medium text-yellow-600 border-b pb-1">🗓️ Upcoming Placement Schedule</h4>
+                        <div id="placement-schedule-list" class="space-y-3">
+                            </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xl font-medium text-yellow-600 border-b pb-1">📝 Training & Resources</h4>
+                        <div id="placement-training-list" class="space-y-3">
+                            </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xl font-medium text-yellow-600 border-b pb-1">🚀 Job & Internship Openings</h4>
+                        <div id="job-internship-list" class="space-y-3">
+                            </div>
+                    </div>
+
+                    <div class="space-y-4 pt-4 border-t border-yellow-200">
+                        <h4 class="text-xl font-medium text-yellow-600 border-b pb-1">❓ Ask the Placement Cell (Q&A)</h4>
+                        <form id="ask-placement-form" class="space-y-3 card p-4 bg-white shadow-inner">
+                            <div>
+                                <label for="placement-query-title" class="block text-sm font-medium text-gray-700">Query Summary</label>
+                                <input type="text" id="placement-query-title" required placeholder="e.g., Eligibility for Cognizant"
+                                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                            </div>
+                            <div>
+                                <label for="placement-query-content" class="block text-sm font-medium text-gray-700">Detailed Question</label>
+                                <textarea id="placement-query-content" required rows="2" placeholder="What is the required CGPA cutoff for the latest internship application?"
+                                          class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+                            </div>
+                            <button type="submit" class="w-full px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
+                                Submit Question to Placement Cell
+                            </button>
+                            <p id="placement-query-message" class="text-sm pt-1 text-center"></p>
+                        </form>
+                        <h5 class="text-lg font-semibold text-yellow-700 pt-2">Your Recent Placement Questions:</h5>
+                        <div id="student-placement-queries-list" class="space-y-3">
+                            </div>
+                    </div>
+
+                    <div class="space-y-3 pt-4 border-t border-yellow-200">
+                        <h4 class="text-xl font-medium text-yellow-600 border-b pb-1">💬 Placement Queries Assistant (Gemini AI)</h4>
+                        <div id="placement-chat-messages" class="chat-messages-container">
+                            <div class="text-gray-500">Ask about placement policies, companies, or interview tips!</div>
+                        </div>
+                        <div class="flex">
+                            <input type="text" id="placement-chat-input" placeholder="What is the process for DataSync Solutions?" class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:ring-yellow-500 focus:border-yellow-500">
+                            <button id="placement-send-chat-btn" class="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-r-lg hover:bg-yellow-700 transition">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section id="faculty-view" class="role-view hidden card p-6 bg-green-50 border-l-4 border-green-500 space-y-6">
+                <h2 class="text-3xl font-bold text-green-800 border-b pb-2">🧑‍🏫 Faculty Portal (<span id="faculty-branch-display"></span>)</h2>
+                
+                <div class="space-y-3 card p-5 bg-white shadow-md">
+                    <h4 class="text-xl font-medium text-green-600 border-b pb-1">📩 Respond to Student Queries</h4>
+                    <div id="faculty-queries-to-answer-list" class="space-y-4">
+                        </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="text-xl font-medium text-green-600 border-b pb-1">⏰ My Daily Schedule</h4>
+                    <div id="faculty-schedule-list" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        </div>
+                </div>
+
+                <div class="space-y-3 card p-5 bg-white shadow-md">
+                    <h4 class="text-xl font-medium text-green-600 border-b pb-1">⬆️ Upload Notes to Branch Drive</h4>
+                    <form id="upload-notes-form" class="space-y-4">
+                        <div>
+                            <label for="note-title" class="block text-sm font-medium text-gray-700">Note Title</label>
+                            <input type="text" id="note-title" required placeholder="e.g., Deep Learning Unit 3 Slides"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div>
+                            <label for="note-link" class="block text-sm font-medium text-gray-700">Drive Link (URL)</label>
+                            <input type="url" id="note-link" required value="#"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div>
+                            <label for="note-branch" class="block text-sm font-medium text-gray-700">Target Branch</label>
+                            <select id="note-branch" required
+                                    class="mt-1 block w-full p-2 border border-gray-300 bg-white rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                                </select>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition">
+                            Upload Note
+                        </button>
+                        <p id="upload-message" class="text-sm pt-2 text-center"></p>
+                    </form>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="text-xl font-medium text-green-600 border-b pb-1">💬 Faculty & Admin Queries Assistant (Gemini AI)</h4>
+                    <div id="faculty-chat-messages" class="chat-messages-container">
+                        <div class="text-gray-500">Ask about research, policy, collaboration, or college director's updates.</div>
+                    </div>
+                    <div class="flex">
+                        <input type="text" id="faculty-chat-input" placeholder="Query about the new grading policy..." class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:ring-green-500 focus:border-green-500">
+                        <button id="faculty-send-chat-btn" class="px-6 py-3 bg-green-600 text-white font-semibold rounded-r-lg hover:bg-green-700 transition">Send</button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 card p-5 bg-white shadow-md">
+                    <h4 class="text-xl font-medium text-green-600 border-b pb-1">📢 Post Campus Notice (Daily Update)</h4>
+                    <form id="post-notice-form" class="space-y-4">
+                        <div>
+                            <label for="notice-title" class="block text-sm font-medium text-gray-700">Title</label>
+                            <input type="text" id="notice-title" required 
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        </div>
+                        <div>
+                            <label for="notice-content" class="block text-sm font-medium text-gray-700">Content</label>
+                            <textarea id="notice-content" required rows="3"
+                                      class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"></textarea>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition">Post Notice</button>
+                        <p id="notice-message" class="text-sm pt-2 text-center"></p>
+                    </form>
+                </div>
+
+            </section>
+
+            <section id="admin-placement-view" class="role-view hidden card p-6 bg-yellow-50 border-l-4 border-yellow-500 space-y-6">
+                <h2 class="text-3xl font-bold text-yellow-800 border-b pb-2">💼 Placement Cell Console</h2>
+
+                <div class="space-y-3 card p-5 bg-white shadow-md">
+                    <h4 class="text-xl font-medium text-yellow-700 border-b pb-1">📩 Respond to Student Placement Queries</h4>
+                    <div id="placement-queries-to-answer-list" class="space-y-4">
+                        </div>
+                </div>
+                
+                <div class="space-y-3 card p-5 bg-white shadow-md">
+                    <h4 class="text-xl font-medium text-yellow-700 border-b pb-1">🚀 Upload Job / Internship Opportunity</h4>
+                    <form id="upload-job-form" class="space-y-4">
+                        <div>
+                            <label for="job-company" class="block text-sm font-medium text-gray-700">Company Name</label>
+                            <input type="text" id="job-company" required placeholder="e.g., TechCorp Solutions"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div>
+                            <label for="job-role" class="block text-sm font-medium text-gray-700">Role/Title</label>
+                            <input type="text" id="job-role" required placeholder="e.g., Software Development Engineer"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div class="flex space-x-4">
+                            <div class="flex-1">
+                                <label for="job-type" class="block text-sm font-medium text-gray-700">Type</label>
+                                <select id="job-type" required
+                                        class="mt-1 block w-full p-2 border border-gray-300 bg-white rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                                    <option value="false">Full-Time Job</option>
+                                    <option value="true">Internship</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label for="job-deadline" class="block text-sm font-medium text-gray-700">Deadline (DD/MMM/YYYY)</label>
+                                <input type="text" id="job-deadline" required value="30/Dec/2025"
+                                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
+                            Post Opportunity
+                        </button>
+                        <p id="job-message" class="text-sm pt-2 text-center"></p>
+                    </form>
+                </div>
+
+                <div class="space-y-3 card p-5 bg-white shadow-md">
+                    <h4 class="text-xl font-medium text-yellow-700 border-b pb-1">🗓️ Upload Placement Schedule Event</h4>
+                    <form id="upload-schedule-form" class="space-y-4">
+                        <div>
+                            <label for="schedule-company" class="block text-sm font-medium text-gray-700">Company Name</label>
+                            <input type="text" id="schedule-company" required placeholder="e.g., TechCorp Solutions"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div>
+                            <label for="schedule-date" class="block text-sm font-medium text-gray-700">Date (DD/MMM/YYYY)</label>
+                            <input type="text" id="schedule-date" required value="05/Feb/2026"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div class="flex space-x-4">
+                            <div class="flex-1">
+                                <label for="schedule-role" class="block text-sm font-medium text-gray-700">Target Role</label>
+                                <input type="text" id="schedule-role" required placeholder="e.g., AI/ML Engineer"
+                                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                            </div>
+                            <div class="flex-1">
+                                <label for="schedule-stage" class="block text-sm font-medium text-gray-700">Stage</label>
+                                <input type="text" id="schedule-stage" required placeholder="e.g., Online Assessment"
+                                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
+                            Add Schedule Event
+                        </button>
+                        <p id="schedule-message" class="text-sm pt-2 text-center"></p>
+                    </form>
+                </div>
+
+                <div class="space-y-3 card p-5 bg-white shadow-md">
+                    <h4 class="text-xl font-medium text-yellow-700 border-b pb-1">📝 Upload Training Resource (Link)</h4>
+                    <form id="upload-resource-form" class="space-y-4">
+                        <div>
+                            <label for="resource-title" class="block text-sm font-medium text-gray-700">Resource Title</label>
+                            <input type="text" id="resource-title" required placeholder="e.g., Mock Interview Guide"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div>
+                            <label for="resource-link" class="block text-sm font-medium text-gray-700">Resource Link (PDF/Drive URL)</label>
+                            <input type="url" id="resource-link" required value="#"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div>
+                            <label for="resource-provider" class="block text-sm font-medium text-gray-700">Provider/Source</label>
+                            <input type="text" id="resource-provider" required placeholder="e.g., Placement Cell" value="Placement Cell"
+                                   class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
+                            Share Resource
+                        </button>
+                        <p id="resource-message" class="text-sm pt-2 text-center"></p>
+                    </form>
+                </div>
+                
+                <div class="space-y-3">
+                    <h4 class="text-xl font-medium text-yellow-700 border-b pb-1">💬 Placement Admin Assistant (Gemini AI)</h4>
+                    <div id="placement-admin-chat-messages" class="chat-messages-container">
+                        <div class="text-gray-500">Respond to student policy questions or collaborate with other placement officers.</div>
+                    </div>
+                    <div class="flex">
+                        <input type="text" id="placement-admin-chat-input" placeholder="Query about policy clarification or respond to student question..." class="flex-grow p-3 border border-gray-300 rounded-l-lg focus:ring-yellow-500 focus:border-yellow-500">
+                        <button id="placement-admin-send-chat-btn" class="px-6 py-3 bg-yellow-600 text-white font-semibold rounded-r-lg hover:bg-yellow-700 transition">Send</button>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+        
+        <footer class="mt-8 text-sm text-gray-500">
+            Powered by Mock Data & Gemini API
+        </footer>
+
+    </div>
+
+    <script type="module">
+
+        // --- MOCK DATA SETUP (Replaces Firestore) ---
+        const MOCK_BRANCHES = ["AI Branch (3rd Year)", "CS Branch", "ECE Branch", "Civil Branch"];
+
+        const WHITELISTED_USERS = {
+            // Students (AI Branch - 3rd Year)
+            "shreyashetty670@gmail.com": { id: "shreyashetty670", role: "Student", branch: "AI Branch (3rd Year)" },
+            "swathi6105@gmail.com": { id: "swathi6105", role: "Student", branch: "AI Branch (3rd Year)" },
+            "thrisha745@gmail.com": { id: "thrisha745", role: "Student", branch: "AI Branch (3rd Year)" },
+            
+            // Faculty
+            "faculty1@gmail.com": { id: "faculty1", role: "Faculty", branch: "CS Branch" },
+            "faculty2@gmail.com": { id: "faculty2", role: "Faculty", branch: "AI Branch (3rd Year)" }, // Changed branch to match student branch format
+            
+            // Placement Cell
+            "placement1@gmail.com": { id: "placement1", role: "Placement Cell", branch: "General" },
+            "placement2@gmail.com": { id: "placement2", role: "Placement Cell", branch: "General" },
+            
+            // Optional Admin for development
+            "admin@campus.edu": { id: "admin-101", role: "Admin", branch: "System" },
+        };
+        
+        let MOCK_USER_ID = null;
+        let MOCK_USER_ROLE = null; 
+        let MOCK_USER_BRANCH = null;
+        
+        // Mock Notices array (Public/Shared)
+        let MOCK_NOTICES = [
+            {
+                title: "Welcome to CampusConnect!",
+                content: "This application is currently running on mock data due to environment configuration issues.",
+                author: "System",
+                date: new Date().toLocaleString()
+            },
+            {
+                title: "Mandatory AI Seminar on Transformers",
+                content: "All 3rd year AI students must attend the seminar on Friday at 10 AM in Lab 2. Attendance is tracked.",
+                author: "AI Faculty",
+                date: new Date(Date.now() - 86400000).toLocaleString()
+            }
+        ];
+
+        // Mock Notes array (Branch-Specific)
+        let MOCK_NOTES = [
+            {
+                branch: "AI Branch (3rd Year)",
+                title: "Deep Learning Midterm Review (PDF)",
+                link: "#", // Placeholder for actual drive link
+                uploader: "Prof. P. Sharma",
+                date: new Date().toLocaleString()
+            },
+            {
+                branch: "CS Branch",
+                title: "Data Structures - Linked List Assignment Solution",
+                link: "#",
+                uploader: "Faculty1",
+                date: new Date(Date.now() - 172800000).toLocaleString()
+            }
+        ];
+
+        // New Mock Data for Student Dashboard Expansion
+        const MOCK_EVENTS = [
+            { date: "10/Dec", title: "Inter-Branch Quiz Competition", location: "Auditorium", type: "Academic" },
+            { date: "15/Dec", title: "Annual Sports Day Registration Deadline", location: "Gymnasium", type: "General" },
+            { date: "22/Dec", title: "Farewell Party for Final Year", location: "Lawn", type: "General" }
+        ];
+
+        const MOCK_SCHEDULE = {
+            "AI Branch (3rd Year)": [
+                { time: "9:00 - 10:00", subject: "Deep Learning (DL)", location: "Lab 2" },
+                { time: "10:00 - 11:00", subject: "Ethics in AI (EAI)", location: "Room 401" },
+                { time: "11:30 - 12:30", subject: "ML Algorithms (MLA)", location: "Room 402" }
+            ],
+            "CS Branch": [
+                { time: "9:00 - 10:00", subject: "Operating Systems", location: "Room 305" },
+                { time: "10:00 - 11:00", subject: "DBMS", location: "Lab 1" }
+            ]
+        };
+        
+        // New Mock Data for Faculty Schedule
+        const MOCK_FACULTY_SCHEDULE = {
+            "faculty1@gmail.com": [ // CS Branch
+                { time: "9:00 - 10:00", subject: "Operating Systems (CS)", location: "Room 305", class: "3rd Year CS" },
+                { time: "11:00 - 12:00", subject: "Research Guidance", location: "Faculty Office 101", class: "General" },
+                { time: "1:00 - 2:00", subject: "DBMS Lab Session", location: "Lab 1", class: "3rd Year CS" }
+            ],
+            "faculty2@gmail.com": [ // AI Branch
+                { time: "9:00 - 10:00", subject: "Deep Learning (AI)", location: "Lab 2", class: "3rd Year AI" },
+                { time: "10:00 - 11:00", subject: "Department Meeting", location: "HOD Office", class: "Admin" },
+                { time: "1:00 - 2:00", subject: "Ethics in AI (EAI)", location: "Room 401", class: "3rd Year AI" }
+            ]
+        };
+
+        // Mock data structure for Placement Content
+        let MOCK_PLACEMENT_DATA = {
+            schedule: [
+                { date: "05/Jan/2026", company: "DataSync Solutions", role: "AI/ML Engineer", stage: "Pre-Placement Talk" },
+                { date: "12/Jan/2026", company: "CyberGuard Tech", role: "Security Analyst", stage: "Online Assessment" },
+            ],
+            training: [
+                { title: "Advanced Python for Interviews", link: "#", provider: "SkillUp Academy" },
+                { title: "Soft Skills: Group Discussion Mastery", link: "#", provider: "HR Faculty" },
+            ],
+            jobs: [
+                { company: "Global AI Innovators", role: "Junior Data Scientist", internship: false, deadline: "30/Dec/2025" },
+                { company: "Local Dev Studio", role: "Summer Intern (Web)", internship: true, deadline: "15/Dec/2025" },
+            ]
+        };
+        
+        // --- NEW MOCK DATA STRUCTURES FOR Q&A ---
+
+        // Placement Cell Queries: Shared by all students, answered by Placement Cell
+        let MOCK_PLACEMENT_QUERIES = [
+            { id: 101, studentId: "shreyashetty670", title: "Cognizant Eligibility", content: "Is there a specific CGPA cutoff for the Cognizant application?", date: new Date(Date.now() - 3600000).toLocaleString(), answered: false, answer: null, answerer: null },
+            { id: 100, studentId: "swathi6105", title: "Interview Tips for Startups", content: "What kind of questions do typical startups ask in the final round?", date: new Date(Date.now() - 86400000).toLocaleString(), answered: true, answer: "Focus on problem-solving, data structures, and system design basics. Show enthusiasm for their mission.", answerer: "placement1" },
+        ];
+
+        // Faculty Queries: Specific to a branch, answered by faculty in that branch
+        let MOCK_FACULTY_QUERIES = [
+            { id: 201, studentId: "shreyashetty670", branch: "AI Branch (3rd Year)", title: "Deep Learning Unit 3 Doubt", content: "Can you explain the difference between RNN and LSTM in the context of sequence generation?", date: new Date(Date.now() - 1800000).toLocaleString(), answered: false, answer: null, answerer: null },
+            { id: 200, studentId: "thrisha745", branch: "AI Branch (3rd Year)", title: "Midterm Paper Date", content: "When is the scheduled date for the Data Structures midterm examination?", date: new Date(Date.now() - 172800000).toLocaleString(), answered: true, answer: "The Data Structures midterm is scheduled for the first week of February. Refer to the Events section for the exact date.", answerer: "faculty2" },
+            { id: 202, studentId: "shreyashetty670", branch: "CS Branch", title: "OS Query", content: "Why do we need virtual memory in operating systems?", date: new Date(Date.now() - 172800000).toLocaleString(), answered: false, answer: null, answerer: null },
+        ];
+
+        let MOCK_QUERY_ID_COUNTER = 203; // Simple way to generate unique IDs
+        // ---------------------------------------------
+        
+        // Global Gemini API key
+        // API key removed — Gemini calls now go through our own backend at /api/chat,
+        // which keeps the real key on the server (see api/chat.js).
+
+        // 1. INITIALIZATION & LOGIN LOGIC
+        
+        // Function called upon successful login
+        const displayApp = (email, userDetails) => {
+            MOCK_USER_ID = userDetails.id;
+            MOCK_USER_ROLE = userDetails.role;
+            MOCK_USER_BRANCH = userDetails.branch;
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+
+            // Update UI Header
+            document.getElementById('user-id-display').textContent = `User: ${email}`; 
+            document.getElementById('user-role-display').textContent = `Role: ${MOCK_USER_ROLE} (${MOCK_USER_BRANCH || 'General'})`;
+            
+            // Show role-specific views
+            document.querySelectorAll('.role-view').forEach(el => el.classList.add('hidden'));
+            
+            if (MOCK_USER_ROLE === 'Student') {
+                document.getElementById('student-view').classList.remove('hidden');
+                document.getElementById('student-branch-display').textContent = MOCK_USER_BRANCH;
+                
+                // Student-specific display functions
+                displayMockNotes(MOCK_USER_BRANCH); 
+                displayMockEvents();
+                displayMockSchedule(MOCK_USER_BRANCH);
+                displayMockPlacementData(); // Display all placement data
+                setupStudentQueryForms(); // Setup Q&A submission
+                displayStudentQueries(); // Display Q&A history
+
+                // Setup chat listeners
+                setupChatbotListeners('academic');
+                setupChatbotListeners('placement');
+
+            } else if (MOCK_USER_ROLE === 'Faculty') {
+                document.getElementById('faculty-view').classList.remove('hidden');
+                document.getElementById('faculty-branch-display').textContent = MOCK_USER_BRANCH;
+                
+                // Faculty-specific display functions
+                setupNoticePosting();
+                setupNotesUploadForm();
+                displayMockFacultySchedule(email);
+                displayFacultyQueriesToAnswer(); // New Q&A management
+                setupChatbotListeners('faculty');
+            } else if (MOCK_USER_ROLE === 'Placement Cell') {
+                document.getElementById('admin-placement-view').classList.remove('hidden');
+                
+                // Placement Cell specific setup
+                displayPlacementQueriesToAnswer(); // New Q&A management
+                setupJobUploadForm();
+                setupScheduleUploadForm();
+                setupResourceUploadForm();
+                setupChatbotListeners('placement-admin');
+            }
+
+            // Display mock notices (shared by everyone)
+            displayMockNotices();
+        };
+
+        // Handles the login form submission
+        const handleLogin = (e) => {
+            e.preventDefault();
+            const emailInput = document.getElementById('login-email');
+            const messageEl = document.getElementById('login-message');
+            const email = emailInput.value.toLowerCase().trim();
+
+            const userDetails = WHITELISTED_USERS[email];
+
+            if (userDetails) {
+                // Successful login
+                messageEl.textContent = `Welcome, ${userDetails.role}!`;
+                messageEl.classList.remove('text-red-500');
+                messageEl.classList.add('text-green-500');
+                
+                // Simulate delay then display the app
+                setTimeout(() => {
+                    displayApp(email, userDetails);
+                }, 500);
+
+            } else {
+                // Failed login
+                messageEl.textContent = 'Access Denied: Email is not whitelisted.';
+                messageEl.classList.remove('text-green-500');
+                messageEl.classList.add('text-red-500');
+            }
+        };
+
+        // --- MOCK DATA DISPLAY FUNCTIONS (Standard) ---
+        
+        function displayMockNotices() {
+            const noticesListEl = document.getElementById('notices-list');
+            
+            let noticesHtml = '';
+            if (MOCK_NOTICES.length === 0) {
+                noticesHtml = '<p class="text-gray-500 italic">No announcements available.</p>';
+            } else {
+                const sortedNotices = MOCK_NOTICES.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sortedNotices.forEach(notice => {
+                    noticesHtml += `
+                        <div class="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition">
+                            <p class="text-lg font-medium text-gray-800">${notice.title}</p>
+                            <p class="text-sm text-gray-600 mt-1">${notice.content}</p>
+                            <p class="text-xs text-indigo-500 mt-2">Posted by: ${notice.author} on ${notice.date}</p>
+                        </div>
+                    `;
+                });
+            }
+            noticesListEl.innerHTML = noticesHtml;
+        }
+
+        function displayMockNotes(branch) {
+            const notesListEl = document.getElementById('shared-notes-list');
+            const filteredNotes = MOCK_NOTES.filter(note => note.branch === branch);
+            
+            let notesHtml = '';
+
+            if (filteredNotes.length === 0) {
+                notesHtml = `<p class="text-gray-500 italic">No notes shared yet for the ${branch}.</p>`;
+            } else {
+                const sortedNotes = filteredNotes.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                sortedNotes.forEach(note => {
+                    notesHtml += `
+                        <div class="p-4 bg-white border border-indigo-200 rounded-lg shadow-sm flex justify-between items-center">
+                            <div>
+                                <p class="text-lg font-medium text-indigo-800">${note.title}</p>
+                                <p class="text-xs text-gray-500 mt-1">Uploaded by: ${note.uploader} on ${note.date}</p>
+                            </div>
+                            <a href="${note.link}" target="_blank" class="px-3 py-1 bg-indigo-500 text-white text-sm rounded-full hover:bg-indigo-600 transition">
+                                Get PDF/Access Link
+                            </a>
+                        </div>
+                    `;
+                });
+            }
+            notesListEl.innerHTML = notesHtml;
+        }
+
+        function displayMockEvents() {
+            const eventsListEl = document.getElementById('events-list');
+            let eventsHtml = '';
+
+            MOCK_EVENTS.forEach(event => {
+                eventsHtml += `
+                    <div class="p-3 bg-white border border-indigo-200 rounded-lg shadow-sm">
+                        <p class="text-sm font-semibold text-indigo-700">${event.title}</p>
+                        <p class="text-xs text-gray-600">Date: <span class="font-medium">${event.date}</span> | Location: ${event.location}</p>
+                    </div>
+                `;
+            });
+            eventsListEl.innerHTML = eventsHtml;
+        }
+
+        function displayMockSchedule(branch) {
+            const scheduleListEl = document.getElementById('schedule-list');
+            const schedule = MOCK_SCHEDULE[branch] || [];
+            let scheduleHtml = '';
+
+            if (schedule.length === 0) {
+                scheduleHtml = `<p class="text-gray-500 italic col-span-3">Daily schedule not available for ${branch}.</p>`;
+            } else {
+                schedule.forEach(item => {
+                    scheduleHtml += `
+                        <div class="p-3 bg-white border border-indigo-200 rounded-lg shadow-sm">
+                            <p class="text-lg font-bold text-gray-800">${item.time}</p>
+                            <p class="text-sm text-indigo-600">${item.subject}</p>
+                            <p class="text-xs text-gray-500">${item.location}</p>
+                        </div>
+                    `;
+                });
+            }
+            scheduleListEl.innerHTML = scheduleHtml;
+        }
+        
+        function displayMockFacultySchedule(email) {
+            const scheduleListEl = document.getElementById('faculty-schedule-list');
+            const schedule = MOCK_FACULTY_SCHEDULE[email] || [];
+            let scheduleHtml = '';
+
+            if (schedule.length === 0) {
+                scheduleHtml = `<p class="text-gray-500 italic col-span-3">Daily teaching schedule not configured for this account.</p>`;
+            } else {
+                schedule.forEach(item => {
+                    scheduleHtml += `
+                        <div class="p-3 bg-white border border-green-200 rounded-lg shadow-sm">
+                            <p class="text-lg font-bold text-gray-800">${item.time}</p>
+                            <p class="text-sm text-green-600">${item.subject}</p>
+                            <p class="text-xs text-gray-500">Class: ${item.class} | Location: ${item.location}</p>
+                        </div>
+                    `;
+                });
+            }
+            scheduleListEl.innerHTML = scheduleHtml;
+        }
+
+        function displayMockPlacementData() {
+            // Placement Schedule
+            const placementScheduleListEl = document.getElementById('placement-schedule-list');
+            let scheduleHtml = '';
+            
+            // Sort by date (mock sorting)
+            const sortedSchedule = [...MOCK_PLACEMENT_DATA.schedule].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            sortedSchedule.forEach(item => {
+                scheduleHtml += `
+                    <div class="p-3 bg-white border border-yellow-200 rounded-lg shadow-sm flex justify-between items-center">
+                        <div>
+                            <p class="text-md font-medium text-yellow-800">${item.company} - ${item.role}</p>
+                            <p class="text-xs text-gray-500 mt-1">Stage: ${item.stage}</p>
+                        </div>
+                        <span class="text-sm font-bold text-red-600">${item.date}</span>
+                    </div>
+                `;
+            });
+            placementScheduleListEl.innerHTML = scheduleHtml;
+
+            // Training
+            const placementTrainingListEl = document.getElementById('placement-training-list');
+            let trainingHtml = '';
+            MOCK_PLACEMENT_DATA.training.forEach(item => {
+                trainingHtml += `
+                    <div class="p-3 bg-white border border-yellow-200 rounded-lg shadow-sm flex justify-between items-center">
+                        <p class="text-md font-medium text-yellow-800">${item.title} - <span class="font-normal text-sm text-gray-600">${item.provider}</span></p>
+                        <a href="${item.link}" target="_blank" class="px-3 py-1 bg-yellow-500 text-white text-sm rounded-full hover:bg-yellow-600 transition">
+                            Start Training
+                        </a>
+                    </div>
+                `;
+            });
+            placementTrainingListEl.innerHTML = trainingHtml;
+
+            // Jobs/Internships
+            const jobInternshipListEl = document.getElementById('job-internship-list');
+            let jobHtml = '';
+            
+            // Sort by deadline (mock sorting)
+            const sortedJobs = [...MOCK_PLACEMENT_DATA.jobs].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+            
+            sortedJobs.forEach(item => {
+                jobHtml += `
+                    <div class="p-3 bg-white border border-yellow-200 rounded-lg shadow-sm">
+                        <p class="text-lg font-medium text-yellow-800">${item.company} - ${item.role} (${item.internship ? 'Internship' : 'Full-Time'})</p>
+                        <p class="text-xs text-gray-500">Application Deadline: <span class="font-bold text-red-500">${item.deadline}</span></p>
+                    </div>
+                `;
+            });
+            jobInternshipListEl.innerHTML = jobHtml;
+        }
+
+        // --- NEW Q&A SYSTEM IMPLEMENTATION ---
+        
+        // --- STUDENT VIEW (Display History & Forms) ---
+        
+        function displayStudentQueries() {
+            // 1. Placement Queries
+            const placementListEl = document.getElementById('student-placement-queries-list');
+            const studentPlacementQueries = MOCK_PLACEMENT_QUERIES
+                .filter(q => q.studentId === MOCK_USER_ID)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            let placementHtml = '';
+            if (studentPlacementQueries.length === 0) {
+                placementHtml = '<p class="text-gray-500 italic">No placement questions submitted yet.</p>';
+            } else {
+                studentPlacementQueries.forEach(q => {
+                    const statusClass = q.answered ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300';
+                    const statusText = q.answered ? `Answered by ${q.answerer}` : 'Awaiting response...';
+                    
+                    placementHtml += `
+                        <div class="p-4 ${statusClass} rounded-lg shadow-sm">
+                            <p class="font-semibold text-gray-800">${q.title} <span class="text-xs font-normal text-gray-500 ml-2">(${q.date})</span></p>
+                            <p class="text-sm italic text-gray-600 mt-1">Q: ${q.content}</p>
+                            ${q.answered ? `<p class="text-sm font-medium text-green-700 mt-2">A: ${q.answer}</p>` : ''}
+                            <span class="text-xs block mt-2 font-bold ${q.answered ? 'text-green-600' : 'text-red-600'}">${statusText}</span>
+                        </div>
+                    `;
+                });
+            }
+            placementListEl.innerHTML = placementHtml;
+
+            // 2. Faculty Queries
+            const facultyListEl = document.getElementById('student-faculty-queries-list');
+            const studentFacultyQueries = MOCK_FACULTY_QUERIES
+                .filter(q => q.studentId === MOCK_USER_ID && q.branch === MOCK_USER_BRANCH) // Filter by user AND branch
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            let facultyHtml = '';
+            if (studentFacultyQueries.length === 0) {
+                facultyHtml = '<p class="text-gray-500 italic">No academic questions submitted yet.</p>';
+            } else {
+                studentFacultyQueries.forEach(q => {
+                    const statusClass = q.answered ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300';
+                    const statusText = q.answered ? `Answered by ${q.answerer}` : 'Awaiting response...';
+                    
+                    facultyHtml += `
+                        <div class="p-4 ${statusClass} rounded-lg shadow-sm">
+                            <p class="font-semibold text-gray-800">${q.title} <span class="text-xs font-normal text-gray-500 ml-2">(${q.date})</span></p>
+                            <p class="text-sm italic text-gray-600 mt-1">Q: ${q.content}</p>
+                            ${q.answered ? `<p class="text-sm font-medium text-green-700 mt-2">A: ${q.answer}</p>` : ''}
+                            <span class="text-xs block mt-2 font-bold ${q.answered ? 'text-green-600' : 'text-red-600'}">${statusText}</span>
+                        </div>
+                    `;
+                });
+            }
+            facultyListEl.innerHTML = facultyHtml;
+        }
+        
+        function setupStudentQueryForms() {
+            // Ask Placement Form
+            const placementForm = document.getElementById('ask-placement-form');
+            if (placementForm) {
+                placementForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const title = document.getElementById('placement-query-title').value.trim();
+                    const content = document.getElementById('placement-query-content').value.trim();
+                    const messageEl = document.getElementById('placement-query-message');
+
+                    const newQuery = {
+                        id: MOCK_QUERY_ID_COUNTER++,
+                        studentId: MOCK_USER_ID,
+                        title: title,
+                        content: content,
+                        date: new Date().toLocaleString(),
+                        answered: false,
+                        answer: null,
+                        answerer: null
+                    };
+                    MOCK_PLACEMENT_QUERIES.unshift(newQuery);
+                    
+                    messageEl.textContent = 'Question submitted successfully to the Placement Cell!';
+                    messageEl.className = 'text-sm pt-1 text-center text-green-500';
+                    placementForm.reset();
+                    
+                    displayStudentQueries();
+                    setTimeout(() => { messageEl.textContent = ''; }, 3000);
+                });
+            }
+
+            // Ask Faculty Form
+            const facultyForm = document.getElementById('ask-faculty-form');
+            if (facultyForm) {
+                facultyForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const title = document.getElementById('faculty-query-title').value.trim();
+                    const content = document.getElementById('faculty-query-content').value.trim();
+                    const messageEl = document.getElementById('faculty-query-message');
+
+                    const newQuery = {
+                        id: MOCK_QUERY_ID_COUNTER++,
+                        studentId: MOCK_USER_ID,
+                        branch: MOCK_USER_BRANCH,
+                        title: title,
+                        content: content,
+                        date: new Date().toLocaleString(),
+                        answered: false,
+                        answer: null,
+                        answerer: null
+                    };
+                    MOCK_FACULTY_QUERIES.unshift(newQuery);
+                    
+                    messageEl.textContent = `Question submitted successfully to Faculty in the ${MOCK_USER_BRANCH}!`;
+                    messageEl.className = 'text-sm pt-1 text-center text-green-500';
+                    facultyForm.reset();
+                    
+                    displayStudentQueries();
+                    setTimeout(() => { messageEl.textContent = ''; }, 3000);
+                });
+            }
+        }
+
+        // --- FACULTY VIEW (Q&A Management) ---
+        
+        function displayFacultyQueriesToAnswer() {
+            const listEl = document.getElementById('faculty-queries-to-answer-list');
+            const unansweredQueries = MOCK_FACULTY_QUERIES
+                .filter(q => q.branch === MOCK_USER_BRANCH && !q.answered)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let html = '';
+            
+            if (unansweredQueries.length === 0) {
+                html = '<p class="text-gray-500 italic">No pending academic queries for your branch.</p>';
+            } else {
+                unansweredQueries.forEach(q => {
+                    html += `
+                        <div class="card p-4 border border-green-300 bg-white">
+                            <p class="text-lg font-semibold text-green-800">${q.title}</p>
+                            <p class="text-sm text-gray-600 mt-1">From: ${q.studentId} (${q.branch}) | Date: ${q.date}</p>
+                            <p class="text-md italic text-gray-700 mt-2">Question: ${q.content}</p>
+                            
+                            <form data-query-id="${q.id}" class="answer-faculty-form mt-3 space-y-2">
+                                <textarea name="answer" required rows="3" placeholder="Type your detailed response here..."
+                                          class="w-full p-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"></textarea>
+                                <button type="submit" class="w-full px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition">
+                                    Post Answer
+                                </button>
+                            </form>
+                            <p class="message-${q.id} text-sm pt-1 text-center"></p>
+                        </div>
+                    `;
+                });
+            }
+            listEl.innerHTML = html;
+            
+            // Attach event listeners to the new forms
+            document.querySelectorAll('.answer-faculty-form').forEach(form => {
+                form.addEventListener('submit', handleFacultyAnswerSubmission);
+            });
+        }
+        
+        function handleFacultyAnswerSubmission(e) {
+            e.preventDefault();
+            const form = e.target;
+            const queryId = parseInt(form.getAttribute('data-query-id'));
+            const answer = form.elements['answer'].value.trim();
+            const messageEl = document.querySelector(`.message-${queryId}`);
+            
+            const queryIndex = MOCK_FACULTY_QUERIES.findIndex(q => q.id === queryId);
+            
+            if (queryIndex !== -1) {
+                MOCK_FACULTY_QUERIES[queryIndex].answered = true;
+                MOCK_FACULTY_QUERIES[queryIndex].answer = answer;
+                MOCK_FACULTY_QUERIES[queryIndex].answerer = MOCK_USER_ID;
+                
+                messageEl.textContent = 'Answer posted successfully!';
+                messageEl.className = `text-sm pt-1 text-center text-green-500`;
+                
+                // Refresh both the faculty list and the student's list
+                setTimeout(() => {
+                    displayFacultyQueriesToAnswer(); 
+                    if (document.getElementById('student-view').classList.contains('hidden') === false) {
+                        displayStudentQueries();
+                    }
+                }, 500);
+            }
+        }
+        
+        // --- PLACEMENT CELL VIEW (Q&A Management) ---
+
+        function displayPlacementQueriesToAnswer() {
+            const listEl = document.getElementById('placement-queries-to-answer-list');
+            const unansweredQueries = MOCK_PLACEMENT_QUERIES
+                .filter(q => !q.answered)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let html = '';
+            
+            if (unansweredQueries.length === 0) {
+                html = '<p class="text-gray-500 italic">No pending placement queries.</p>';
+            } else {
+                unansweredQueries.forEach(q => {
+                    html += `
+                        <div class="card p-4 border border-yellow-300 bg-white">
+                            <p class="text-lg font-semibold text-yellow-800">${q.title}</p>
+                            <p class="text-sm text-gray-600 mt-1">From: ${q.studentId} | Date: ${q.date}</p>
+                            <p class="text-md italic text-gray-700 mt-2">Question: ${q.content}</p>
+                            
+                            <form data-query-id="${q.id}" class="answer-placement-form mt-3 space-y-2">
+                                <textarea name="answer" required rows="3" placeholder="Type your detailed response here..."
+                                          class="w-full p-2 border border-gray-300 rounded-md focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+                                <button type="submit" class="w-full px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
+                                    Post Answer
+                                </button>
+                            </form>
+                            <p class="message-${q.id} text-sm pt-1 text-center"></p>
+                        </div>
+                    `;
+                });
+            }
+            listEl.innerHTML = html;
+            
+            // Attach event listeners to the new forms
+            document.querySelectorAll('.answer-placement-form').forEach(form => {
+                form.addEventListener('submit', handlePlacementAnswerSubmission);
+            });
+        }
+
+        function handlePlacementAnswerSubmission(e) {
+            e.preventDefault();
+            const form = e.target;
+            const queryId = parseInt(form.getAttribute('data-query-id'));
+            const answer = form.elements['answer'].value.trim();
+            const messageEl = document.querySelector(`.message-${queryId}`);
+            
+            const queryIndex = MOCK_PLACEMENT_QUERIES.findIndex(q => q.id === queryId);
+            
+            if (queryIndex !== -1) {
+                MOCK_PLACEMENT_QUERIES[queryIndex].answered = true;
+                MOCK_PLACEMENT_QUERIES[queryIndex].answer = answer;
+                MOCK_PLACEMENT_QUERIES[queryIndex].answerer = MOCK_USER_ID;
+                
+                messageEl.textContent = 'Answer posted successfully!';
+                messageEl.className = `text-sm pt-1 text-center text-green-500`;
+                
+                // Refresh both the placement list and the student's list
+                setTimeout(() => {
+                    displayPlacementQueriesToAnswer();
+                    if (document.getElementById('student-view').classList.contains('hidden') === false) {
+                        displayStudentQueries();
+                    }
+                }, 500);
+            }
+        }
+
+        // --- EXISTING ADMIN FORMS (RETAINED) ---
+
+        function setupNoticePosting() {
+            const form = document.getElementById('post-notice-form');
+            const titleInput = document.getElementById('notice-title');
+            const contentInput = document.getElementById('notice-content');
+            const messageEl = document.getElementById('notice-message');
+
+            if (!form) return;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const newNotice = {
+                    title: titleInput.value.trim(),
+                    content: contentInput.value.trim(),
+                    author: `${MOCK_USER_ROLE} (${MOCK_USER_ID})`,
+                    date: new Date().toLocaleString()
+                };
+
+                MOCK_NOTICES.unshift(newNotice); 
+                displayMockNotices(); 
+
+                messageEl.textContent = 'Notice posted successfully (in memory)!';
+                messageEl.classList.remove('text-red-500');
+                messageEl.classList.add('text-green-500');
+                titleInput.value = '';
+                contentInput.value = '';
+
+                setTimeout(() => { messageEl.textContent = ''; }, 3000);
+            });
+        }
+        
+        function setupNotesUploadForm() {
+            const form = document.getElementById('upload-notes-form');
+            const titleInput = document.getElementById('note-title');
+            const linkInput = document.getElementById('note-link');
+            const branchSelect = document.getElementById('note-branch');
+            const messageEl = document.getElementById('upload-message');
+
+            branchSelect.innerHTML = MOCK_BRANCHES.map(branch => 
+                `<option value="${branch}" ${branch === MOCK_USER_BRANCH ? 'selected' : ''}>${branch}</option>`
+            ).join('');
+
+            if (!form) return;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const newNote = {
+                    title: titleInput.value.trim(),
+                    link: linkInput.value.trim(),
+                    branch: branchSelect.value,
+                    uploader: `${MOCK_USER_ID}`,
+                    date: new Date().toLocaleString()
+                };
+
+                MOCK_NOTES.unshift(newNote); 
+                
+                if (!document.getElementById('student-view').classList.contains('hidden')) {
+                     displayMockNotes(MOCK_USER_BRANCH);
+                }
+
+                messageEl.textContent = `Note uploaded successfully for ${newNote.branch}!`;
+                messageEl.classList.remove('text-red-500');
+                messageEl.classList.add('text-green-500');
+                
+                titleInput.value = '';
+                linkInput.value = '#';
+                branchSelect.value = MOCK_USER_BRANCH; 
+
+                setTimeout(() => { messageEl.textContent = ''; }, 3000);
+            });
+        }
+        
+        function setupJobUploadForm() {
+            const form = document.getElementById('upload-job-form');
+            const companyInput = document.getElementById('job-company');
+            const roleInput = document.getElementById('job-role');
+            const typeSelect = document.getElementById('job-type');
+            const deadlineInput = document.getElementById('job-deadline');
+            const messageEl = document.getElementById('job-message');
+
+            if (!form) return;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const newJob = {
+                    company: companyInput.value.trim(),
+                    role: roleInput.value.trim(),
+                    internship: typeSelect.value === 'true',
+                    deadline: deadlineInput.value.trim()
+                };
+
+                MOCK_PLACEMENT_DATA.jobs.unshift(newJob); 
+                displayMockPlacementData(); 
+
+                messageEl.textContent = `Job posted successfully for ${newJob.company}!`;
+                messageEl.classList.remove('text-red-500');
+                messageEl.classList.add('text-green-500');
+                
+                companyInput.value = '';
+                roleInput.value = '';
+                typeSelect.value = 'false';
+
+                setTimeout(() => { messageEl.textContent = ''; }, 3000);
+            });
+        }
+
+        function setupScheduleUploadForm() {
+            const form = document.getElementById('upload-schedule-form');
+            const companyInput = document.getElementById('schedule-company');
+            const dateInput = document.getElementById('schedule-date');
+            const roleInput = document.getElementById('schedule-role');
+            const stageInput = document.getElementById('schedule-stage');
+            const messageEl = document.getElementById('schedule-message');
+
+            if (!form) return;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const newSchedule = {
+                    company: companyInput.value.trim(),
+                    date: dateInput.value.trim(),
+                    role: roleInput.value.trim(),
+                    stage: stageInput.value.trim()
+                };
+
+                MOCK_PLACEMENT_DATA.schedule.unshift(newSchedule); 
+                displayMockPlacementData(); 
+
+                messageEl.textContent = `Schedule event added for ${newSchedule.company}!`;
+                messageEl.classList.remove('text-red-500');
+                messageEl.classList.add('text-green-500');
+                
+                companyInput.value = '';
+                roleInput.value = '';
+                stageInput.value = '';
+
+                setTimeout(() => { messageEl.textContent = ''; }, 3000);
+            });
+        }
+        
+        function setupResourceUploadForm() {
+            const form = document.getElementById('upload-resource-form');
+            const titleInput = document.getElementById('resource-title');
+            const linkInput = document.getElementById('resource-link');
+            const providerInput = document.getElementById('resource-provider');
+            const messageEl = document.getElementById('resource-message');
+
+            if (!form) return;
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const newResource = {
+                    title: titleInput.value.trim(),
+                    link: linkInput.value.trim(),
+                    provider: providerInput.value.trim()
+                };
+
+                MOCK_PLACEMENT_DATA.training.unshift(newResource); 
+                displayMockPlacementData(); 
+
+                messageEl.textContent = `Resource shared successfully: ${newResource.title}!`;
+                messageEl.classList.remove('text-red-500');
+                messageEl.classList.add('text-green-500');
+                
+                titleInput.value = '';
+                linkInput.value = '#';
+                providerInput.value = 'Placement Cell';
+
+                setTimeout(() => { messageEl.textContent = ''; }, 3000);
+            });
+        }
+
+
+        // --- CHATBOT INTEGRATION (Gemini API - REFACTORED) ---
+
+        const addMessageToChat = (containerId, text, sender) => {
+            const chatMessages = document.getElementById(containerId);
+            const className = sender === 'user' ? 'bg-indigo-100 text-indigo-800 self-end' : 'bg-gray-200 text-gray-700 self-start';
+            const containerClass = sender === 'user' ? 'flex justify-end' : 'flex justify-start';
+            
+            const messageEl = document.createElement('div');
+            messageEl.className = `${containerClass} w-full`;
+            
+            const contentEl = document.createElement('p');
+            contentEl.className = `max-w-[75%] p-3 rounded-xl break-words ${className}`; 
+            contentEl.textContent = text;
+            messageEl.appendChild(contentEl);
+
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+        
+        const callGeminiChatbot = async (prompt, containerId, instruction) => {
+            const chatMessages = document.getElementById(containerId);
+            
+            // Remove previous thinking message if it exists
+            const thinkingMessages = [...chatMessages.children].filter(el => el.textContent.includes('Thinking...'));
+            thinkingMessages.forEach(msg => chatMessages.removeChild(msg));
+
+            addMessageToChat(containerId, 'Thinking...', 'gemini');
+            
+            // Calls our own backend instead of Gemini directly, so the real API key
+            // never has to sit in the browser / this HTML file.
+            const apiUrl = '/api/chat';
+
+            const payload = { prompt, instruction };
+
+            const maxRetries = 3;
+            let response, result;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.status === 429) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    result = await response.json();
+                    break;
+                } catch (error) {
+                    if (i === maxRetries - 1) {
+                        console.error("Gemini API call failed after retries:", error);
+                        const finalThinkingMessage = [...chatMessages.children].find(el => el.textContent.includes('Thinking...'));
+                        if (finalThinkingMessage) {
+                             const p = finalThinkingMessage.querySelector('p');
+                             p.textContent = 'Error: Could not connect to the chatbot.';
+                             p.classList.remove('bg-gray-200', 'text-gray-700');
+                             p.classList.add('bg-red-200', 'text-red-800');
+                        }
+                        return;
+                    }
+                }
+            }
+
+            const finalThinkingMessage = [...chatMessages.children].find(el => el.textContent.includes('Thinking...'));
+            if (finalThinkingMessage) {
+                chatMessages.removeChild(finalThinkingMessage);
+            }
+            
+            const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response. Please try again.";
+            addMessageToChat(containerId, text, 'gemini');
+        };
+
+        function setupChatbotListeners(type) {
+            let inputId, btnId, containerId, instruction;
+            
+            if (type === 'academic') {
+                inputId = 'academic-chat-input';
+                btnId = 'academic-send-chat-btn';
+                containerId = 'academic-chat-messages';
+                instruction = `You are a specialized Campus Academic Assistant for students in the ${MOCK_USER_BRANCH}. Your primary role is to answer questions about courses, notes, timetable, and general college queries. Be helpful and professional.`;
+            } else if (type === 'placement') {
+                inputId = 'placement-chat-input';
+                btnId = 'placement-send-chat-btn';
+                containerId = 'placement-chat-messages';
+                instruction = "You are a Placement and Career Assistant. Your primary role is to answer student queries about placement schedules, company processes, interview tips, and job application information. Be encouraging and focus on career success.";
+            } else if (type === 'faculty') {
+                inputId = 'faculty-chat-input';
+                btnId = 'faculty-send-chat-btn';
+                containerId = 'faculty-chat-messages';
+                instruction = `You are a College Administration and Research Assistant for a faculty member in the ${MOCK_USER_BRANCH}. Your role is to answer queries about institutional policies, faculty collaboration, college director updates, and research opportunities. Maintain a formal, advisory tone.`;
+            } else if (type === 'placement-admin') {
+                inputId = 'placement-admin-chat-input';
+                btnId = 'placement-admin-send-chat-btn';
+                containerId = 'placement-admin-chat-messages';
+                instruction = "You are a specialized Placement Cell Coordinator Assistant. Your role is to advise on placement policy, help draft responses to common student queries, and assist with administrative tasks. Maintain a highly professional and factual tone.";
+            } else {
+                return; 
+            }
+
+
+            const chatInput = document.getElementById(inputId);
+            const sendChatBtn = document.getElementById(btnId);
+
+            if (sendChatBtn) {
+                const handleSend = () => {
+                    const prompt = chatInput.value.trim();
+                    if (prompt) {
+                        addMessageToChat(containerId, prompt, 'user');
+                        sendChatBtn.disabled = true;
+                        sendChatBtn.textContent = 'Sending...';
+
+                        callGeminiChatbot(prompt, containerId, instruction).finally(() => {
+                            sendChatBtn.disabled = false;
+                            sendChatBtn.textContent = 'Send';
+                        });
+
+                        chatInput.value = '';
+                    }
+                };
+                
+                sendChatBtn.addEventListener('click', handleSend);
+                
+                chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); 
+                        handleSend();
+                    }
+                });
+            }
+        }
+
+        // 9. STARTUP LOGIC
+        const initApp = () => {
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('login-email').focus(); 
+        };
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
