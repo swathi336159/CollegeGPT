@@ -94,7 +94,7 @@ The app currently uses a whitelisted-email mock auth system (no real password/au
 
 | Role | Email |
 |---|---|
-| Student (AI Branch) | `shreyashetty670@gmail.com` |
+| Student (AI Branch) | `student1@gmail.com` |
 | Faculty (CS) | `faculty1@gmail.com` |
 | Placement Cell | `placement1@gmail.com` |
 

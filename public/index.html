@@ -48,7 +48,7 @@
             <form id="login-form" class="space-y-4">
                 <div>
                     <label for="login-email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input type="email" id="login-email" required placeholder="e.g., shreyashetty670@gmail.com or placement1@gmail.com"
+                    <input type="email" id="login-email" required placeholder="e.g., student1@gmail.com or placement1@gmail.com"
                            class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 <button type="submit" id="login-btn" class="w-full px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition">
@@ -60,7 +60,7 @@
             <div class="mt-4 p-3 bg-indigo-50 rounded-lg text-sm text-indigo-700">
                 <p class="font-semibold mb-1">Current Whitelisted User Groups (Case Sensitive):</p>
                 <ul class="list-disc list-inside text-xs space-y-1">
-                    <li>**Students (3rd Year AI):** shreyashetty670, swathi6105, thrisha745</li>
+                    <li>**Students (3rd Year AI):** student1, swathi6105, student2</li>
                     <li>**Faculty:** faculty1@gmail.com (CS), faculty2@gmail.com (AI)</li>
                     <li>**Placement Cell:** placement1@gmail.com, placement2@gmail.com</li>
                 </ul>
@@ -394,9 +394,9 @@
 
         const WHITELISTED_USERS = {
             // Students (AI Branch - 3rd Year)
-            "shreyashetty670@gmail.com": { id: "shreyashetty670", role: "Student", branch: "AI Branch (3rd Year)" },
+            "student1@gmail.com": { id: "student1", role: "Student", branch: "AI Branch (3rd Year)" },
             "swathi6105@gmail.com": { id: "swathi6105", role: "Student", branch: "AI Branch (3rd Year)" },
-            "thrisha745@gmail.com": { id: "thrisha745", role: "Student", branch: "AI Branch (3rd Year)" },
+            "student2@gmail.com": { id: "student2", role: "Student", branch: "AI Branch (3rd Year)" },
             
             // Faculty
             "faculty1@gmail.com": { id: "faculty1", role: "Faculty", branch: "CS Branch" },
@@ -501,15 +501,15 @@
 
         // Placement Cell Queries: Shared by all students, answered by Placement Cell
         let MOCK_PLACEMENT_QUERIES = [
-            { id: 101, studentId: "shreyashetty670", title: "Cognizant Eligibility", content: "Is there a specific CGPA cutoff for the Cognizant application?", date: new Date(Date.now() - 3600000).toLocaleString(), answered: false, answer: null, answerer: null },
+            { id: 101, studentId: "student1", title: "Cognizant Eligibility", content: "Is there a specific CGPA cutoff for the Cognizant application?", date: new Date(Date.now() - 3600000).toLocaleString(), answered: false, answer: null, answerer: null },
             { id: 100, studentId: "swathi6105", title: "Interview Tips for Startups", content: "What kind of questions do typical startups ask in the final round?", date: new Date(Date.now() - 86400000).toLocaleString(), answered: true, answer: "Focus on problem-solving, data structures, and system design basics. Show enthusiasm for their mission.", answerer: "placement1" },
         ];
 
         // Faculty Queries: Specific to a branch, answered by faculty in that branch
         let MOCK_FACULTY_QUERIES = [
-            { id: 201, studentId: "shreyashetty670", branch: "AI Branch (3rd Year)", title: "Deep Learning Unit 3 Doubt", content: "Can you explain the difference between RNN and LSTM in the context of sequence generation?", date: new Date(Date.now() - 1800000).toLocaleString(), answered: false, answer: null, answerer: null },
-            { id: 200, studentId: "thrisha745", branch: "AI Branch (3rd Year)", title: "Midterm Paper Date", content: "When is the scheduled date for the Data Structures midterm examination?", date: new Date(Date.now() - 172800000).toLocaleString(), answered: true, answer: "The Data Structures midterm is scheduled for the first week of February. Refer to the Events section for the exact date.", answerer: "faculty2" },
-            { id: 202, studentId: "shreyashetty670", branch: "CS Branch", title: "OS Query", content: "Why do we need virtual memory in operating systems?", date: new Date(Date.now() - 172800000).toLocaleString(), answered: false, answer: null, answerer: null },
+            { id: 201, studentId: "student1", branch: "AI Branch (3rd Year)", title: "Deep Learning Unit 3 Doubt", content: "Can you explain the difference between RNN and LSTM in the context of sequence generation?", date: new Date(Date.now() - 1800000).toLocaleString(), answered: false, answer: null, answerer: null },
+            { id: 200, studentId: "student2", branch: "AI Branch (3rd Year)", title: "Midterm Paper Date", content: "When is the scheduled date for the Data Structures midterm examination?", date: new Date(Date.now() - 172800000).toLocaleString(), answered: true, answer: "The Data Structures midterm is scheduled for the first week of February. Refer to the Events section for the exact date.", answerer: "faculty2" },
+            { id: 202, studentId: "student1", branch: "CS Branch", title: "OS Query", content: "Why do we need virtual memory in operating systems?", date: new Date(Date.now() - 172800000).toLocaleString(), answered: false, answer: null, answerer: null },
         ];
 
         let MOCK_QUERY_ID_COUNTER = 203; // Simple way to generate unique IDs
